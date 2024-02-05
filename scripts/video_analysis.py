@@ -1,101 +1,61 @@
-from ultralytics import YOLO
-import cv2
-import cvzone
-import math
+from pytube import YouTube
+from moviepy.editor import VideoFileClip
+import os
+
 import numpy as np
-from deep_sort_realtime.deepsort_tracker import DeepSort
+import supervision as sv
+from ultralytics import YOLO
 
-class ObjectDetection():
+def single_video_download(path="Data", url='https://www.youtube.com/watch?v=8ZabZYk8tBg'):
+    try:
+        if not os.path.exists(path):
+            os.makedirs(path)
 
-    def __init__(self, capture):
-        self.capture = capture
-        self.model = self.load_model()
-        self.CLASS_NAMES_DICT = self.model.model.names
+        yt = YouTube(url)
 
-    def load_model(self):
-        model = YOLO('../yolo_weights/yolov8n.pt')
-        model.fuse()
-        return model
+        video = yt.streams.filter(progressive=True, file_extension='mp4', res="720p").first()
 
-    def predict(self, img):
-        results = self.model(img, stream=True)
-        return results
+        if not video:
+            video = yt.streams.filter(progressive=True, file_extension='mp4').order_by('resolution').desc().first()
 
-    def plot_boxes(self, results, img):
-        detections = []
+        if video:
+            video.download(output_path=path)
 
-        for r in results:
-            boxes = r.boxes
-            for box in boxes:
-                x1,y1,x2,y2 = box.xxyy[0]
-                x1,y1,x2,y2 = int(x1), int(y1), int(x2), int(y2)
-                w,h = x2-x1, y2-y1
-
-                # Classname
-                cls = int(box.cls[0])
-                currentClass = self.CLASS_NAMES_DICT[cls]
-
-                # Confidence score
-                conf = math.ceil(box.conf[0]*100)/100
-
-                if conf > 0.5:
-                    detections.append(((x1, y1, w, h), conf, currentClass))
-
-        return detections, img
-
-    def track_detect(self, detections, img, tracker):
-        tracks = tracker.update_tracks(detections, frame=img)
-
-        for track in tracks:
-            if not track.is_confirmed():
-                continue
-            track_id = track.track_id
-            ltrb = track.to_ltrb()
-
-            bbox = ltrb
-
-            x1,y1,x2,y2= bbox
-            x1,y1,x2,y2 = int(x1), int(y1), int(x2), int(y2)
-            w,h = x2-x1, y2-y1
-
-            cvzone.putTextRect(img, f'ID: {track_id}', (x1,y1), scale=1, thickness=1, colorR=(0,255,0))
-            cvzone.cornerRect(img, (x1,y1,w,h), l=9, rt=1, colorR=(255,0,255))
-
-        return img
-
-    def __call__(self):
-        cap = cv2.VideoCapture(self.capture)
-        assert cap.isOpened()
-        tracker = DeepSort(max_age=5,
-                           n_init=2,
-                           nnms_max_overlap=1.0,
-                           max_cosine_distance=0.3,
-                           nn_budget=None,
-                           override_track_class=None,
-                           embedder="mobilenet",
-                           half=True,
-                           bgr=True,
-                           embedder_gpu=True,
-                           embedder_model_name=None,
-                           embedder_wts=None,
-                           polygon=False,
-                           today=None)
-
-        while True:
-            __, img = cap.read()
-            assert __
-
-            results = self.predict(img)
-            detections, frames = self.plot_boxes(results, img)
-            detect_frame = self.track_detect(detections, frames, tracker)
-
-            cv2.imshow('Image', detect_frame)
-            if cv2.waitKey(1) == ord('q'):
-                break
-
-        cap.release()
-        cv2.destroyAllWindows()
+            print(f"Téléchargement de {yt.title} en {video.resolution} réussi")
 
 
-detector = ObjectDetection(capture='../data/test_video/test2.mp4')
-detector()
+        else:
+            print(f"Aucune vidéo disponible pour {url}")
+
+    except Exception as e:
+        print(f"Échec du téléchargement de {url}: {str(e)}")
+
+
+def reduce_video_size(input_path="input_video.mp4", output_path="output_video.mp4", start_time=30, duration=60):
+    try:
+        video = VideoFileClip(input_path)
+        reduced_video = video.subclip(start_time, start_time + duration)
+        reduced_video.write_videofile(output_path, codec="libx264", audio_codec="aac")
+        print(f"La vidéo a été réduite avec succès et enregistrée sous {output_path}")
+    except Exception as e:
+        print(f"Erreur lors de la réduction de la vidéo : {str(e)}")
+
+
+if __name__ == "__main__":
+    #single_video_download()
+    reduce_video_size("Data\\test.mp4", "data\\match.mp4", 0, 60)
+
+
+model = YOLO("yolov8n.pt")
+box_annotator = sv.BoundingBoxAnnotator()
+
+def callback(frame: np.ndarray, _: int) -> np.ndarray:
+    results = model(frame)[0]
+    detections = sv.Detections.from_ultralytics(results)
+    return box_annotator.annotate(frame.copy(), detections=detections)
+
+sv.process_video(
+    source_path="Data\\match.mp4",
+    target_path="result\\result1.mp4",
+    callback=callback
+)
