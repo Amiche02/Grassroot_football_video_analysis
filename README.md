@@ -13,6 +13,7 @@ This project integrates:
 You can have access to the report here:
 📄 **[Project Report](Report/Grassroot_football_analysis_Report.pdf)**
 
+![Processed Match Analysis](data/videos/output.gif)
 ---
 
 ## Features
@@ -25,10 +26,6 @@ You can have access to the report here:
 ✅ **Team Classification via Clustering**: Uses **K-Means clustering** to automatically group players by team colors  
 ✅ **Ball Possession Analysis**: Determines which team controls the ball  
 ✅ **Big Data Video Management**: Handles **500+ grassroots match videos** for long-term tracking and analysis 
-
-
-![Processed Match Analysis](data/videos/output.gif)
-
 
 ---
 
