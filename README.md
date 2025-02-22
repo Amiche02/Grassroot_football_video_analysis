@@ -27,7 +27,7 @@ You can have access to the report here:
 ✅ **Big Data Video Management**: Handles **500+ grassroots match videos** for long-term tracking and analysis 
 
 
-- **[Processed Match Analysis](data\videos\output.gif)**
+- **[Processed Match Analysis](data/videos/output.gif)**
 
 ---
 
@@ -82,8 +82,9 @@ Automatically assigning players to teams based on jersey color:
 ---
 
 ### 🎥 **Match Analysis Results**
-- **[Original Match Footage](data\videos\input.gif)**
-- **[Processed Match Analysis](data\videos\output.gif)**
+- **[Original Match Footage](data/videos/input.gif)**
+
+- **[Processed Match Analysis](data/videos/output.gif)**
 
 ---
 
